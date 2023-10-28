@@ -1,0 +1,68 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+
+env:
+  IMAGE_NAME: homepage
+  VERSION: latest
+  DEPLOYMENT_FILE: inventory/deployment.yml
+  DEPLOYMENT_NAME: homepage-deployment
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+
+      - name: Build image
+        run: docker build . --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Push image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+
+      - uses: azure/k8s-set-context@v1
+        name: Initialize kubectl
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Apply deployment
+        run: |
+          echo Deployment file: $DEPLOYMENT_FILE
+          kubectl apply -f $DEPLOYMENT_FILE
+
+      - name: Rollout and restart deployment
+        run: |
+          echo Deployment name: $DEPLOYMENT_NAME
+          kubectl rollout restart deployment/$DEPLOYMENT_NAME
+
