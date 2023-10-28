@@ -45,9 +45,6 @@ body {
 /*-DESKTOP-*/
 
 .desktop-header {
-    position: fixed;
-    top: 0;
-    left: 0;
     padding: 5px 0;
     display: flex;
     width: 100%;
@@ -154,7 +151,7 @@ body {
 
 .news {
     margin-left: 15%;
-    margin-top: 5%;
+    margin-top: 50px;
 
     color: white;
 }
