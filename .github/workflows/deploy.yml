@@ -42,6 +42,7 @@ jobs:
           docker push $IMAGE_ID:$VERSION
   deploy:
     name: Deploy to Production
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
