@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: homepage-deployment
+
+spec:
+  selector:
+    matchLabels:
+      app: homepage
+
+  template:
+    metadata:
+      labels:
+        app: homepage
+
+    spec:
+      containers:
+        - name: homepage
+          image: ghcr.io/anfanik/homepage:latest
+
+      imagePullSecrets:
+        - name: anfanik-github-registry
+
+---
+
+apiVersion: v1
+
+kind: Service
+metadata:
+  name: homepage-svc
+
+spec:
+  type: ClusterIP
+  selector:
+    app: homepage
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+
+apiVersion: networking.k8s.io/v1
+
+kind: Ingress
+metadata:
+  name: homepage-ingress
+  labels:
+    app: homepage
+
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: anfanik.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage-svc
+                port:
+                  number: 80

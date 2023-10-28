@@ -1,0 +1,8 @@
+#IDEA
+.idea
+*.iml
+
+#macOS
+.DS_Store
+__MACOSX
+*.icloud
